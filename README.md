@@ -1,80 +1,85 @@
-Not Default Pattern Valid Links |
+# 🔍 RO-Setup-Finder
+> A high-efficiency, asynchronous network crawler designed to algorithmically brute-force, validate, and catalog official Ragnarok Online client installers, regional patches, and setup binaries.
+
+## [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/AoShinRO/RO-Setup-Finder)
+
+![Python](https://img.shields.io/badge/Language-Python_3.12-blue?style=for-the-badge&logo=python)
+![Engine](https://img.shields.io/badge/Asynchronous-aiohttp_//_asyncio-purple?style=for-the-badge)
+![Automation](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-green?style=for-the-badge&logo=githubactions)
+
+Finding official client files for Ragnarok Online across different regional distributors (kRO, twRO, jRO) is a major challenge due to unindexed directories and rotating filenames. **RO-Setup-Finder** automates link validation by generating multi-format date permutations over historical ranges, executing low-overhead async requests, and committing validated endpoints directly into a structured live database.
+
+---
+
+## 🚀 Live Data Stream
+
+📅 Not Default Pattern Valid Links |
 ------|
 http://rofull.gnjoy.com/KR_RO1_Live_20251001_122947.tar
 [![Monthly Update Valid Links](https://img.shields.io/badge/%E2%96%B6%20Monthly%20Update%20Valid%20Links%20Here-e8b84b?style=for-the-badge&labelColor=cc0000)](https://github.com/AoShinRO/RO-Setup-Finder/blob/main/links_validos.md)
 ---
 
-# RO-Setup-Finder
+## ⚙️ Core Architecture & Operational Logic
 
-**RO-Setup-Finder** is an automated tool that scans, identifies, and catalogs valid download links for Ragnarok Online client installers, patches, and setup files hosted on official distribution servers (`rofull.gnjoy.com` and `twcdn.gnjoy.com.tw`).
+### ⚡ Non-Blocking High-Throughput Scraper
+The scanning engine avoids sequential execution bottlenecks by deploying an asynchronous HTTP pool handled via `aiohttp` and structured coroutines.
 
-It generates every possible URL combination across a date range using known file naming patterns, tests each one asynchronously, and outputs a list of all available downloads.
+* **Rate-Limit Guard:** Includes a `0.15s` artificial thread cooldown combined with a strict concurrency bottleneck restriction (`asyncio.Semaphore(6)`). This prevents target Content Delivery Networks (CDNs) from flagging the runtime environment as a malicious DoS vector.
+* **Date Mask Parsing:** Automatically rolls dates sequentially starting from `January 1st, 2020` up through the execution timestamp, mapping strings into alternating short-year masks (`%y%m%d` -> `d6`) and full-century masks (`%Y%m%d` -> `d8`).
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/AoShinRO/RO-Setup-Finder)
+### 🗺️ Monitored Regional CDNs & Distribution Footprints
+
+The pattern matrix targets official distribution nodes, mapping formats across servers for varying environments:
+
+| Regional Publisher / Tag | Core Domain Endpoint | Formats Searched | Target Infrastructure |
+| :--- | :--- | :--- | :--- |
+| **Gravity kRO / Zero** | `rofull.gnjoy.com` | `.exe`, `.zip`, `.bin` | Main live clients, Sakray test beds, and Zero nodes. |
+| **Gravity Game Taiwan** | `twcdn.gnjoy.com.tw` | `.exe` | Taiwanese localized setups (`RO_Install`, `RAGNAROK`). |
+| **GungHo Japan (jRO)** | `patch2.gungho.jp` | `.tar` | Full client tarballs (`JP_Live`). |
 
 ---
 
-## Features
+## 🛠️ Automated Cron Infrastructure
 
-- Asynchronous HTTP scanning with configurable concurrency (semaphore-based)
-- Automatic date generation in both `YYMMDD` and `YYYYMMDD` formats
-- Covers kRO, Sakray, and Zero client variants (`.exe`, `.zip`, `.bin`)
-- Rate-limited requests to avoid server-side blocking
-- Graceful error handling with per-URL status reporting
-- Results automatically committed via GitHub Actions on a monthly schedule
+The scanner handles automated collection tasks independently via standard CI/CD pipelines.
+
+The built-in GitHub Actions workflow (`.github/workflows/main.yml`) uses a cron trigger configured for the **1st day of every month** (`0 0 1 * *`). It performs clean dependencies setup, executes the multi-threaded network check, compares output deltas, and automatically commits fresh results to `links_validos.md` using isolated runner tokens.
 
 ---
 
-## How It Works
+## 🖥️ Local Execution & Environment Setup
 
-The scanner generates URLs from known patterns such as:
+### Prerequisites
+* Python `3.9+` (Tested on `3.12`)
+* Network access to target domains
 
+### Installation
+1. Clone the repository:
+```bash
+   git clone https://github.com/AoShinRO/RO-Setup-Finder.git
+   cd RO-Setup-Finder
 ```
-http://rofull.gnjoy.com/RAG_SETUP_{YYMMDD}.exe
-http://rofull.gnjoy.com/ZERO_SETUP_{YYMMDD}.exe
-http://rofull.gnjoy.com/RagnarokZero_{YYMMDD}.zip
-http://rofull.gnjoy.com/RAG_SETUP_{YYYYMMDD}.exe
-http://twcdn.gnjoy.com.tw/ragnarok/Client/RAGNAROK_{YYYYMMDD}.exe
-```
 
-Each URL is tested with an HTTP HEAD/GET request. Links returning `200 OK` are saved to the output file.
-
----
-
-## Requirements
-
-- Python 3.9+
-- [aiohttp](https://docs.aiohttp.org/)
-
+2. Install the necessary network hooks:
 ```bash
 pip install aiohttp
 ```
 
----
-
-## Usage
-
+3. Run the generator:
 ```bash
 python3 rosetupfinder.py
 ```
 
-Valid links will be written to `links_validos.md` (or `links_validos.txt` if configured).
+4. Check the results in the newly compiled file: `links_validos.md`
 
 ---
 
-## Automation
+## ⚖️ Disclaimer & Compliance Notice
 
-A GitHub Actions workflow runs this script automatically on the **1th of every month**, committing any updated results back to the repository. It can also be triggered manually via `workflow_dispatch`.
-
----
-
-## Disclaimer
-
-This tool **does not download any files** — it only checks URL availability.  
-Intended for cataloging, preservation, and research purposes.
+This tool is designed strictly for research, digital preservation, and educational archiving purposes. **RO-Setup-Finder does not pull down or store the actual game binaries** — it issues connection requests to identify active download links. All checked links resolve to official, unmodified distribution systems owned by Gravity Co., Ltd. and their associated regional operational partners.
 
 ---
 
-## License
+## 📜 License
 
-This project is licensed under the [GNU General Public License v3.0](LICENSE).
+This project is open-source and licensed under the terms of the [GNU General Public License v3.0](https://www.google.com/search?q=LICENSE).
